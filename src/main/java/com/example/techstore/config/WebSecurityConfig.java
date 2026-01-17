@@ -1,24 +1,23 @@
 package com.example.techstore.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.example.techstore.service.UserSecurityService;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-	// @Autowired
-	// private UserSecurityService userSecurityService;
+	@Autowired
+	private UserSecurityService userSecurityService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,7 +30,8 @@ public class WebSecurityConfig {
 				.loginPage("/login")
 				.permitAll()
 			)
-			.logout(LogoutConfigurer::permitAll);
+			.logout(LogoutConfigurer::permitAll)
+			.userDetailsService(userSecurityService);
 
 		return http.build();
 	}
@@ -39,23 +39,5 @@ public class WebSecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
-	}
-
-	// @Bean
-    // public UserDetailsService userDetailsService() {
-    //     return userSecurityService;
-    // }
-
-	@Bean
-	public UserDetailsService userDetailsService() {
-		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-		UserDetails user =
-			 User.builder()
-				.username("user")
-				.password(encoder.encode("user"))
-				.roles("USER")
-				.build();
-
-		return new InMemoryUserDetailsManager(user);
 	}
 }
