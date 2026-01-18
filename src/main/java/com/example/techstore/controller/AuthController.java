@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,24 +40,48 @@ public class AuthController {
   @PostMapping(path="/add") // Map ONLY POST Requests
   public String addNewUser (@RequestParam String username
       , @RequestParam String password 
-      , @RequestParam String email) {
+      , @RequestParam String email
+      , Model model) {
     // @ResponseBody means the returned String is the response, not a view name
     // @RequestParam means it is a parameter from the GET or POST request
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     
-    User n = new User();
-    n.setUsername(username);
-    n.setPassword(encoder.encode(password));
-    n.setEmail(email);
-    userRepository.save(n);
+    try {
+      if(username.isEmpty() || password.isEmpty() || email.isEmpty()){
+        model.addAttribute("error", "Не все данные указаны");
+        return "add";
+      }
+      if(email.indexOf("@") < 0){
+        model.addAttribute("mail", "Неверный формат e-mail");
+        return "add";
+      }
+      User user_name = userRepository.findByUsername(username);
+      if(user_name != null){
+        model.addAttribute("username", "Данное имя уже существует");
+        return "add";
+      }
+      User user_pass = userRepository.findByPassword(password);
+      if(user_pass != null){
+        model.addAttribute("pass", "Введите другой пароль");
+        return "add";
+      }
 
-    Optional<Roles> roleOpt = roleRepository.findById(2);
-    if (roleOpt.isPresent()) {
-        Roles role = roleOpt.get();
-        UserRoles ur = new UserRoles();
-        ur.setUser(n);
-        ur.setRole(role);
-        userRoleRepository.save(ur);
+      User n = new User();
+      n.setUsername(username);
+      n.setPassword(encoder.encode(password));
+      n.setEmail(email);
+      userRepository.save(n);
+
+      Optional<Roles> roleOpt = roleRepository.findById(2);
+      if (roleOpt.isPresent()) {
+          Roles role = roleOpt.get();
+          UserRoles ur = new UserRoles();
+          ur.setUser(n);
+          ur.setRole(role);
+          userRoleRepository.save(ur);
+      }
+    } catch(Exception e){
+        model.addAttribute("server_error", "Ошибка на сервере");
     }
 
     return "login";

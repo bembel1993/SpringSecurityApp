@@ -5,6 +5,13 @@
     </head>
     <body>
         <form th:action="@{/auth/add}" method="post">
+            <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+            
+            <div th:if= "${error != null}"><div class="alert alert-danger" role="alert">Не все данные заполнены</div></div>
+            <div th:if= "${pass != null}"><div class="alert alert-danger" role="alert">Пароль не совпал</div></div>
+            <div th:if= "${mail != null}"><div class="alert alert-danger" role="alert">Некорректно указан E-mail</div></div>
+            <div th:if= "${username != null}"><div class="alert alert-danger" role="alert">Имя уже существует</div></div>
+
             <div><label> User Name : <input type="text" name="username"/> </label></div>
             <div><label> Password: <input type="password" name="password"/> </label></div>
             <div><label> Email: <input type="email" name="email"/> </label></div>
